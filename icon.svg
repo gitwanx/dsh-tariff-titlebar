@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe28f"/>
+      <stop offset="0.55" stop-color="#f5bf3f"/>
+      <stop offset="1" stop-color="#d9941c"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="27" fill="url(#coin)"/>
+  <circle cx="32" cy="32" r="27" fill="none" stroke="#b87c0f" stroke-opacity="0.55" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="#8a5c08" stroke-opacity="0.18" stroke-width="2"/>
+  <path d="M17 40 26 27.5 34.5 34 47 17.5" fill="none" stroke="#6b4a06" stroke-width="4.6"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="47" cy="17.5" r="3.4" fill="#6b4a06"/>
+</svg>

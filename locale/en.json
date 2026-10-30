@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek Tariff Display",
+    "description": "Shows today's peak/off-peak billing windows, current window, countdown and account balance in the window title bar."
+  }
+}
