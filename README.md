@@ -11,7 +11,7 @@
 包名 `@local/dsh-tariff-titlebar`，本地目录安装（PowerShell；路径含 `'`，bash 单引号会断开）：
 
 ```powershell
-dsh plugin --profile desktop add "C:\Users\wang'xing\Documents\deepseek-harness\default-workspace\plugins\dsh-tariff-titlebar"
+dsh plugin --profile desktop add "%USERPROFILE%\Documents\deepseek-harness\default-workspace\plugins\dsh-tariff-titlebar"
 ```
 
 - 命令转发给 profile 里的 pnpm，本地目录记成 `link:C:/...`；装完**自动追加进** `~/.dsh/profiles/desktop/package.json` 的 `dsh.profile.bundles`。
