@@ -1,5 +1,59 @@
 # DeepSeek 时段收费显示插件
 
+## 这是什么 / 谁在用 / 怎么开始
+
+在桌面端 Windows 标题栏居中显示当日峰谷计费时段、当前时段高亮、下一跳倒计时，第二行是余额与 tokens 用量。
+想知道「现在是不是双倍价」「我这账号一共烧了多少 token」的桌面端用户用它。
+第一步：装上，**重启一次 DSH 桌面端**（Host 路由要加载），标题栏就出现卡片。
+
+## 安装
+
+包名 `@local/dsh-tariff-titlebar`，本地目录安装（PowerShell；路径含 `'`，bash 单引号会断开）：
+
+```powershell
+dsh plugin --profile desktop add "C:\Users\wang'xing\Documents\deepseek-harness\default-workspace\plugins\dsh-tariff-titlebar"
+```
+
+- 命令转发给 profile 里的 pnpm，本地目录记成 `link:C:/...`；装完**自动追加进** `~/.dsh/profiles/desktop/package.json` 的 `dsh.profile.bundles`。
+- **但本插件有 Host 半侧**（`index.js` 注册 `/dsh-tariff/account-usage`，`inject: ["webServer","deepseekAccount"]`）：首次安装或改过 `index.js` 后必须**重启一次 DSH 桌面端**，光刷新页面不够；之后改 `client.js` 刷新页面即可（HMR）。
+- 验收两条：① 标题栏出现峰谷卡片；② `GET http://127.0.0.1:<GUI端口>/dsh-tariff/account-usage` 返回 `{"ok":true,...}`，或 `{"ok":false,"error":"not signed in"}`（后者=没登录账号，属正常，不影响峰谷显示）。
+
+## 怎么用
+
+- **位置**：`shell.overlay`，order 10，靠 `--dsh-windows-titlebar-height` 铺满标题栏并居中；**只在 `html[data-windows-titlebar]` 下显示**——用普通浏览器打开 Web GUI 看不到。
+- **上排**：五个时段胶囊（00–09 空闲、09–12 高峰、12–14 空闲、14–18 高峰、18–24 空闲），高峰金色、当前时段更深底 + 同色描边并带「时间 · 计费阶段」。
+- **收起/展开**：上排最右小箭头 `︿`／`﹀`，收起态单行约 22px，状态存 `localStorage` 的 `dsh.tariffTitlebar.collapsed.v2`。
+- **倒计时**：右侧独立胶囊带时钟图标，每秒刷新、精确到秒，会跳过周末与法定节假日，指向下一个真正的高峰开始/结束；切到高峰琥珀色、切到空闲绿色。
+- **第二行**：余额胶囊（`remote.account.getBalance`，进页面 / 窗口聚焦 / 每 60 秒刷新；≥¥10 紫、¥5–10 蓝、¥1–5 琥珀、<¥1 红）+ 蓝色用量胶囊（Host 路由按 31 天窗口从 2023-01-01 回溯汇总账号历史 tokens，内存缓存 10 分钟；Host 桥不可用时退回会话累计 tokens，标签变「会话用量」）+ 说明胶囊。
+- **看精确数字**：鼠标在余额/用量胶囊上停约 0.9 秒弹出，移开即消失。
+- **前提**：余额与账号用量需要 DSH 登录账号；只有 API Key、未登录时余额胶囊不显示，其余照常。
+
+## 配置
+
+- `cordis.patch.yml`：一条 insert（`id: tariff-titlebar` / `name: '@local/dsh-tariff-titlebar'`），**无其它字段**。
+- **无 config / 无 UI 配置项**，可调的都是代码常量：
+  - `client.js`：`SEGMENTS`（五个时段边界）、`HOLIDAY_RANGES`（2026 法定节假日，2027 公布后追加）、`COLLAPSED_KEY`（收起状态键名）、余额色阶阈值。
+  - `index.js`：`CACHE_MS = 10 分钟`、`CONCURRENCY = 5`、`WINDOW_SECONDS = 31 天`、`HISTORY_START = 2023-01-01`、单请求超时 `25s`。
+- 停用：profile 的 `cordis.patch.yml` 里给该行加 `disabled: true`。
+
+## 已知限制 / 不在这里放什么
+
+- **不含密钥**：不读、不存 `sk-` API Key；平台授权 token 与 Cookie 只在 Host 进程内使用，不下发浏览器。
+- **不写死账号数据**：余额、用量都是实时取（内存缓存 10 分钟，无落盘文件）；仓库里没有账号信息。
+- **节假日表只到 2026**：2027 年安排公布前，2027 的节假日会按普通工作日/周末算。
+- **只在桌面端标题栏显示**：浏览器 Web GUI 里看不到，不是缺陷。
+- **改 `index.js` 必须重启一次桌面端**，F5 不够（Host 路由在进程启动时注册）。
+- 窗口变窄时依次省略倒计时、品牌文字、非当前时段；窄于 820px 隐藏说明胶囊（余额与用量保留）。
+- 账号用量回溯依赖平台接口，接口本身单次最多 31 天，历史很长时首次汇总偏慢（有 10 分钟缓存兜着）。
+
+## 版本与时间
+
+v1.0.0 · 2026-11-01
+
+---
+
+## 原文档（保留）
+
 在桌面端窗口顶部（Windows 标题栏）居中显示 DeepSeek 当日的峰谷收费时段：五个时段常驻展示，高峰时段着金色、当前时段高亮并带「时间 · 计费阶段」文字，右侧是下一次切换的倒计时；第二行依次是余额胶囊、账号用量胶囊和计费规则说明胶囊。
 
 ## 计费口径
